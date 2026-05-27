@@ -6,6 +6,7 @@ import com.example.encryptiontool.dto.LoginRequest;
 import com.example.encryptiontool.dto.SignupRequest;
 import com.example.encryptiontool.model.User;
 import com.example.encryptiontool.repository.UserRepository;
+import com.example.encryptiontool.security.JwtUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,32 +24,25 @@ public class UserServiceImpl implements UserService {
   @Autowired
   private PasswordEncoder passwordEncoder;
 
+  @Autowired
+  private JwtUtil jwtUtil;
+
   @Override
   public String registerUser(SignupRequest request) {
 
-    // Check if email already exists
     Optional<User> existingUser = userRepository.findByEmail(request.getEmail());
 
     if (existingUser.isPresent()) {
       return "Email already exists";
     }
 
-    // Create new user
     User user = new User();
-
     user.setName(request.getName());
-
     user.setEmail(request.getEmail());
-
-    // Encrypt password
     user.setPassword(passwordEncoder.encode(request.getPassword()));
-
-    // Generate verification token
     user.setVerificationToken(UUID.randomUUID().toString());
-
     user.setVerified(false);
 
-    // Save user
     userRepository.save(user);
 
     return "User registered successfully";
@@ -59,24 +53,20 @@ public class UserServiceImpl implements UserService {
 
     Optional<User> optionalUser = userRepository.findByEmail(request.getEmail());
 
-    // Check if user exists
     if (optionalUser.isEmpty()) {
       return new AuthResponse(null, "Invalid Email");
     }
 
     User user = optionalUser.get();
 
-    // Check password
-    boolean isPasswordMatch =
-        passwordEncoder.matches(request.getPassword(), user.getPassword());
+    boolean isPasswordMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
 
     if (!isPasswordMatch) {
       return new AuthResponse(null, "Invalid Password");
     }
 
-    // JWT will come later
-    String dummyToken = "JWT_TOKEN";
+    String token = jwtUtil.generateToken(user.getEmail());
 
-    return new AuthResponse(dummyToken, "Login Successful");
+    return new AuthResponse(token, "Login Successful");
   }
 }
