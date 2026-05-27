@@ -1,15 +1,14 @@
 package com.example.encryptiontool.controller.report;
 
+import com.example.encryptiontool.controller.BaseController;
 import com.example.encryptiontool.dto.ApiResponse;
 import com.example.encryptiontool.dto.FileRecordResponseDto;
 import com.example.encryptiontool.dto.HistoryResponseDto;
 import com.example.encryptiontool.dto.ReportSummaryDto;
 import com.example.encryptiontool.model.User;
-import com.example.encryptiontool.repository.UserRepository;
 import com.example.encryptiontool.service.report.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,13 +17,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/reports")
-public class ReportController {
+public class ReportController extends BaseController {
 
     @Autowired
     private ReportService reportService;
-
-    @Autowired
-    private UserRepository userRepository;
 
     // GET /api/reports/summary
     // Returns total counts: operations, encryptions, decryptions, emails sent, exports
@@ -51,11 +47,5 @@ public class ReportController {
         User user = getLoggedInUser();
         List<FileRecordResponseDto> files = reportService.getFileRecords(user);
         return ResponseEntity.ok(ApiResponse.ok("File records fetched", files));
-    }
-
-    private User getLoggedInUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
     }
 }

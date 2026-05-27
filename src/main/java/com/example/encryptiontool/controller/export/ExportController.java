@@ -1,26 +1,24 @@
 package com.example.encryptiontool.controller.export;
 
+import com.example.encryptiontool.controller.BaseController;
 import com.example.encryptiontool.dto.ApiResponse;
+import com.example.encryptiontool.exception.AppException;
 import com.example.encryptiontool.model.User;
-import com.example.encryptiontool.repository.UserRepository;
 import com.example.encryptiontool.service.export.ExcelExportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/export")
-public class ExportController {
+public class ExportController extends BaseController {
 
     @Autowired
     private ExcelExportService exportService;
-
-    @Autowired
-    private UserRepository userRepository;
 
     // GET /api/export/encrypt
     // Exports logged-in user's data as encrypted .enc file download
@@ -38,8 +36,8 @@ public class ExportController {
                     .body(encryptedBytes);
 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Export failed: " + e.getMessage()));
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Export failed: " + e.getMessage());
         }
     }
 
@@ -65,15 +63,9 @@ public class ExportController {
                     .body(xlsxBytes);
 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Decryption failed: invalid file or corrupted data"));
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Decryption failed: invalid file or corrupted data");
         }
-    }
-
-    private User getLoggedInUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
     }
 
     private String sanitizeEmail(String email) {

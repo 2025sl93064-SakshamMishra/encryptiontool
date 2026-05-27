@@ -1,28 +1,26 @@
 package com.example.encryptiontool.controller.email;
 
+import com.example.encryptiontool.controller.BaseController;
 import com.example.encryptiontool.dto.ApiResponse;
 import com.example.encryptiontool.dto.EmailDecryptRequest;
 import com.example.encryptiontool.dto.EmailEncryptRequest;
+import com.example.encryptiontool.exception.AppException;
 import com.example.encryptiontool.model.AlgorithmType;
 import com.example.encryptiontool.model.User;
-import com.example.encryptiontool.repository.UserRepository;
 import com.example.encryptiontool.service.email.EmailEncryptionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/email")
-public class EmailController {
+public class EmailController extends BaseController {
 
     @Autowired
     private EmailEncryptionService emailEncryptionService;
-
-    @Autowired
-    private UserRepository userRepository;
 
     @PostMapping("/send-encrypted")
     public ResponseEntity<ApiResponse<Void>> sendEncryptedEmail(
@@ -45,7 +43,7 @@ public class EmailController {
         User sender = getLoggedInUser();
 
         try {
-            String encryptedBody = emailEncryptionService.sendEncryptedEmail(
+            emailEncryptionService.sendEncryptedEmail(
                     sender,
                     request.getToEmail(),
                     request.getSubject() != null ? request.getSubject() : "Encrypted Message",
@@ -60,8 +58,8 @@ public class EmailController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Failed to send email: " + e.getMessage()));
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Failed to send email: " + e.getMessage());
         }
     }
 
@@ -91,14 +89,8 @@ public class EmailController {
             ));
 
         } catch (Exception e) {
-            return ResponseEntity.internalServerError()
-                    .body(ApiResponse.error("Decryption failed: invalid text or wrong algorithm"));
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Decryption failed: invalid text or wrong algorithm");
         }
-    }
-
-    private User getLoggedInUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Authenticated user not found"));
     }
 }
