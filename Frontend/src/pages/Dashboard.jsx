@@ -1,12 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import API from "../api/axios";
 import EncryptedForm from "../components/EncryptedForm";
 import DecryptedForm from "../components/DecryptedForm";
 import Loader from "../components/Loader";
 
-const TABS = ["Text", "Email", "Files", "Reports"];
-
-// ── Email Tab ────────────────────────────────────────────────────────────────
 const ALGORITHMS = [
   { label: "AES-128-CBC", value: "AES_128" },
   { label: "AES-256-CBC", value: "AES_256" },
@@ -14,6 +12,7 @@ const ALGORITHMS = [
   { label: "RSA-2048", value: "RSA" },
 ];
 
+// ── Email Tab ────────────────────────────────────────────────────────────────
 function EmailTab() {
   const [sendForm, setSendForm] = useState({ toEmail: "", subject: "", body: "", algorithm: ALGORITHMS[0].value });
   const [decryptForm, setDecryptForm] = useState({ encryptedText: "", algorithm: ALGORITHMS[0].value });
@@ -54,47 +53,28 @@ function EmailTab() {
 
   return (
     <div className="tab-section two-col">
-      {/* Send Encrypted Email */}
       <div className="panel">
         <h3 className="panel-title">📤 Send Encrypted Email</h3>
         {sendLoading && <Loader />}
         <form onSubmit={handleSend}>
           <div className="form-group">
             <label>Recipient Email</label>
-            <input
-              type="email"
-              placeholder="recipient@example.com"
-              value={sendForm.toEmail}
-              onChange={(e) => setSendForm({ ...sendForm, toEmail: e.target.value })}
-              required
-            />
+            <input type="email" placeholder="recipient@example.com" value={sendForm.toEmail}
+              onChange={(e) => setSendForm({ ...sendForm, toEmail: e.target.value })} required />
           </div>
           <div className="form-group">
             <label>Subject</label>
-            <input
-              type="text"
-              placeholder="Email subject"
-              value={sendForm.subject}
-              onChange={(e) => setSendForm({ ...sendForm, subject: e.target.value })}
-              required
-            />
+            <input type="text" placeholder="Email subject" value={sendForm.subject}
+              onChange={(e) => setSendForm({ ...sendForm, subject: e.target.value })} required />
           </div>
           <div className="form-group">
             <label>Message</label>
-            <textarea
-              rows={4}
-              placeholder="Type your message…"
-              value={sendForm.body}
-              onChange={(e) => setSendForm({ ...sendForm, body: e.target.value })}
-              required
-            />
+            <textarea rows={4} placeholder="Type your message…" value={sendForm.body}
+              onChange={(e) => setSendForm({ ...sendForm, body: e.target.value })} required />
           </div>
           <div className="form-group">
             <label>Algorithm</label>
-            <select
-              value={sendForm.algorithm}
-              onChange={(e) => setSendForm({ ...sendForm, algorithm: e.target.value })}
-            >
+            <select value={sendForm.algorithm} onChange={(e) => setSendForm({ ...sendForm, algorithm: e.target.value })}>
               {ALGORITHMS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
             </select>
           </div>
@@ -106,27 +86,18 @@ function EmailTab() {
         </form>
       </div>
 
-      {/* Decrypt Received Email */}
       <div className="panel">
         <h3 className="panel-title">📥 Decrypt Received Email</h3>
         {decryptLoading && <Loader />}
         <form onSubmit={handleDecrypt}>
           <div className="form-group">
             <label>Encrypted Message</label>
-            <textarea
-              rows={4}
-              placeholder="Paste the encrypted message…"
-              value={decryptForm.encryptedText}
-              onChange={(e) => setDecryptForm({ ...decryptForm, encryptedText: e.target.value })}
-              required
-            />
+            <textarea rows={4} placeholder="Paste the encrypted message…" value={decryptForm.encryptedText}
+              onChange={(e) => setDecryptForm({ ...decryptForm, encryptedText: e.target.value })} required />
           </div>
           <div className="form-group">
             <label>Algorithm</label>
-            <select
-              value={decryptForm.algorithm}
-              onChange={(e) => setDecryptForm({ ...decryptForm, algorithm: e.target.value })}
-            >
+            <select value={decryptForm.algorithm} onChange={(e) => setDecryptForm({ ...decryptForm, algorithm: e.target.value })}>
               {ALGORITHMS.map((a) => <option key={a.value} value={a.value}>{a.label}</option>)}
             </select>
           </div>
@@ -205,33 +176,22 @@ function FilesTab() {
 
   return (
     <div className="tab-section two-col">
-      {/* Export */}
       <div className="panel">
         <h3 className="panel-title">⬇️ Export Encrypted Data</h3>
         <p className="panel-desc">Download all your encrypted records as a <code>.enc</code> file.</p>
         {exportError && <div className="alert alert-error">{exportError}</div>}
-        <button
-          className="btn btn-primary btn-full"
-          onClick={handleExport}
-          disabled={exportLoading}
-        >
+        <button className="btn btn-primary btn-full" onClick={handleExport} disabled={exportLoading}>
           {exportLoading ? "Exporting…" : "Download .enc File"}
         </button>
       </div>
 
-      {/* Import */}
       <div className="panel">
         <h3 className="panel-title">⬆️ Import & Decrypt File</h3>
         <p className="panel-desc">Upload a <code>.enc</code> file to decrypt and download as <code>.xlsx</code>.</p>
         <form onSubmit={handleImport}>
           <div className="form-group">
             <label>Select .enc File</label>
-            <input
-              type="file"
-              accept=".enc"
-              onChange={(e) => setUploadFile(e.target.files[0])}
-              required
-            />
+            <input type="file" accept=".enc" onChange={(e) => setUploadFile(e.target.files[0])} required />
           </div>
           {importError && <div className="alert alert-error">{importError}</div>}
           {importSuccess && <div className="alert alert-success">{importSuccess}</div>}
@@ -307,15 +267,11 @@ function ReportsTab() {
           <div className="table-wrap">
             <table className="data-table">
               <thead>
-                <tr>
-                  {Object.keys(history[0] || {}).map((k) => <th key={k}>{k}</th>)}
-                </tr>
+                <tr>{Object.keys(history[0] || {}).map((k) => <th key={k}>{k}</th>)}</tr>
               </thead>
               <tbody>
                 {history.map((row, i) => (
-                  <tr key={i}>
-                    {Object.values(row).map((v, j) => <td key={j}>{String(v)}</td>)}
-                  </tr>
+                  <tr key={i}>{Object.values(row).map((v, j) => <td key={j}>{String(v)}</td>)}</tr>
                 ))}
               </tbody>
             </table>
@@ -329,15 +285,11 @@ function ReportsTab() {
           <div className="table-wrap">
             <table className="data-table">
               <thead>
-                <tr>
-                  {Object.keys(files[0] || {}).map((k) => <th key={k}>{k}</th>)}
-                </tr>
+                <tr>{Object.keys(files[0] || {}).map((k) => <th key={k}>{k}</th>)}</tr>
               </thead>
               <tbody>
                 {files.map((row, i) => (
-                  <tr key={i}>
-                    {Object.values(row).map((v, j) => <td key={j}>{String(v)}</td>)}
-                  </tr>
+                  <tr key={i}>{Object.values(row).map((v, j) => <td key={j}>{String(v)}</td>)}</tr>
                 ))}
               </tbody>
             </table>
@@ -348,35 +300,106 @@ function ReportsTab() {
   );
 }
 
-// ── Dashboard ────────────────────────────────────────────────────────────────
-function Dashboard() {
-  const [activeTab, setActiveTab] = useState("Text");
+// ── Dashboard Home ────────────────────────────────────────────────────────────
+const STAT_ICONS = ["○", "🔒", "🔒", "✉", "📊"];
+const STAT_LABELS = ["Total Operations", "Encryptions", "Decryptions", "Emails Sent", "Exports"];
+const STAT_KEYS = ["totalOperations", "encryptions", "decryptions", "emailsSent", "exports"];
+
+const QUICK_ACTIONS = [
+  {
+    icon: "abc",
+    title: "Encrypt Text",
+    desc: "Encrypt or decrypt text with AES, 3DES, RSA",
+    section: "text",
+    color: "blue",
+  },
+  {
+    icon: "✉",
+    title: "Email Encryption",
+    desc: "Send or decrypt an encrypted email",
+    section: "email",
+    color: "green",
+  },
+  {
+    icon: "📊",
+    title: "Excel Export",
+    desc: "Export your data as encrypted .enc file",
+    section: "export",
+    color: "blue",
+  },
+  {
+    icon: "📋",
+    title: "Reports",
+    desc: "View your full operation history",
+    section: "reports",
+    color: "yellow",
+  },
+];
+
+function DashboardHome({ onNavigate }) {
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    API.get("/api/reports/summary")
+      .then((res) => setStats(res.data.data))
+      .catch(() => {});
+  }, []);
+
+  const statValues = STAT_KEYS.map((k) => (stats ? (stats[k] ?? 0) : 0));
 
   return (
-    <div className="dashboard">
-      <div className="dashboard-header">
+    <div className="dash-home">
+      <div className="dash-home-header">
         <h2>Dashboard</h2>
-        <p>Encrypt, decrypt, and manage your secure data</p>
+        <p className="dash-home-sub">Overview of your encryption activity</p>
       </div>
 
-      <div className="tabs">
-        {TABS.map((tab) => (
-          <button
-            key={tab}
-            className={`tab-btn ${activeTab === tab ? "active" : ""}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab === "Text" && "🔤 "}
-            {tab === "Email" && "📧 "}
-            {tab === "Files" && "📁 "}
-            {tab === "Reports" && "📊 "}
-            {tab}
-          </button>
+      <div className="dash-stats-row">
+        {STAT_LABELS.map((label, i) => (
+          <div key={label} className="dash-stat-card">
+            <span className="dash-stat-icon">{STAT_ICONS[i]}</span>
+            <span className="dash-stat-value">{statValues[i]}</span>
+            <span className="dash-stat-label">{label}</span>
+          </div>
         ))}
       </div>
 
-      <div className="tab-content">
-        {activeTab === "Text" && (
+      <div className="dash-quick-label">Quick Actions</div>
+      <div className="dash-quick-grid">
+        {QUICK_ACTIONS.map((a) => (
+          <button
+            key={a.section}
+            className={`dash-quick-card dash-quick-${a.color}`}
+            onClick={() => onNavigate(a.section)}
+          >
+            <span className="dash-quick-icon">{a.icon}</span>
+            <div className="dash-quick-info">
+              <span className="dash-quick-title">{a.title}</span>
+              <span className="dash-quick-desc">{a.desc}</span>
+            </div>
+            <span className="dash-quick-arrow">→</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard Root ────────────────────────────────────────────────────────────
+function Dashboard() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const section = params.get("section");
+
+  const goToSection = (s) => navigate(`/dashboard?section=${s}`);
+
+  return (
+    <div className="dashboard">
+      {!section && <DashboardHome onNavigate={goToSection} />}
+
+      {section === "text" && (
+        <div className="tab-content">
           <div className="tab-section two-col">
             <div className="panel">
               <h3 className="panel-title">🔒 Encrypt Text</h3>
@@ -387,11 +410,20 @@ function Dashboard() {
               <DecryptedForm />
             </div>
           </div>
-        )}
-        {activeTab === "Email" && <EmailTab />}
-        {activeTab === "Files" && <FilesTab />}
-        {activeTab === "Reports" && <ReportsTab />}
-      </div>
+        </div>
+      )}
+
+      {section === "email" && (
+        <div className="tab-content"><EmailTab /></div>
+      )}
+
+      {section === "export" && (
+        <div className="tab-content"><FilesTab /></div>
+      )}
+
+      {section === "reports" && (
+        <div className="tab-content"><ReportsTab /></div>
+      )}
     </div>
   );
 }
